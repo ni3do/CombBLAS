@@ -111,6 +111,9 @@ public:
         return glcols;
     }
 
+	NT ** getArray() {return array;}
+
+
 private:
 	std::shared_ptr<CommGrid> commGrid; 
 	NT ** array;

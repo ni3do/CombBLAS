@@ -1006,8 +1006,10 @@ SpParMat<IU, NUO, UDERO> Mult_AnXBn_Synch
 		(SpParMat<IU,NU1,UDERA> & A, SpParMat<IU,NU2,UDERB> & B, bool clearA = false, bool clearB = false )
 
 {
+    cout << "got here" << endl;
     int myrank;
     MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
+    
 	if(!CheckSpGEMMCompliance(A,B) )
 	{
 		return SpParMat< IU,NUO,UDERO >();
@@ -3702,6 +3704,103 @@ SpParMat3D<IU, NUO, UDERO> MemEfficientSpGEMM3D(SpParMat3D<IU, NU1, UDERA> & A, 
     localResultant->ColConcatenate(toconcatenate);
     SpParMat3D<IU, NUO, UDERO> C3D(localResultant, grid3d, A.isColSplit(), A.isSpecial());
     return C3D;
+}
+
+
+template <typename SR, typename IT, typename NU, typename UDER>
+SpParMat<IT, NU, UDER> ScaleSpMatrix(SpParMat<IT, NU, UDER> &A, FullyDistVec<IT, NU> &v){
+    UDER A_elems = *A.getSpSeq();
+    auto grid = A.getcommgrid();
+    
+    IT cols = A_elems.getncol();
+    IT rows = A_elems.getnrow();
+    IT nnz = A_elems.getnnz();
+
+    if (nnz == 0){
+        SpTuples<IT,NU>* tuples = new SpTuples<IT, NU>(0, rows, cols);
+        UDER * out =  new UDER(*tuples, false);
+        return SpParMat<IT, NU, UDER> (out, grid);
+    }
+
+    Dcsc<IT,NU>* Adcsc = A_elems.GetDCSC();
+    std::tuple<IT,IT,NU> * tuplesC = static_cast<std::tuple<IT,IT,NU> *> (::operator new (sizeof(std::tuple<IT,IT,NU>[nnz])));
+    size_t current = 0;
+
+
+    #pragma omp parallel for
+    for (size_t i=0; i < Adcsc->nzc; ++i){
+        IT col = Adcsc->jc[i];
+        size_t nnzInCol = Adcsc->cp[i+1] - Adcsc->cp[i];
+        NU scale = v.get_values().at(col);
+
+        for (size_t j=Adcsc->cp[i]; j < Adcsc->cp[i] + nnzInCol; j++){
+            NU elem = Adcsc->numx[j];
+            IT row = Adcsc->ir[j];
+            NU output = SR::multiply(elem, scale);
+            tuplesC[current++] = std::make_tuple(row, col, output);
+        }
+    }
+
+    SpTuples<IT, NU>* spTuplesC = new SpTuples<IT, NU> (nnz, rows, cols, tuplesC, true, true);
+    UDER *out = new UDER(*spTuplesC, false);
+    return SpParMat<IT, NU, UDER>(out, grid);
+    
+}
+
+
+template <typename SR, typename IT, typename NU, typename UDER>
+SpParMat<IT, NU, UDER> ScaleSpMatrix(SpParMat<IT, NU, UDER> &A, std::vector<NU> &v){
+    int myrank;
+    MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
+
+    
+    UDER A_elems = *A.getSpSeq();
+    auto grid = A.getcommgrid();
+    
+    IT cols = A_elems.getncol();
+    IT rows = A_elems.getnrow();
+    IT nnz = A_elems.getnnz();
+
+    if (nnz == 0){
+        SpTuples<IT,NU>* tuples = new SpTuples<IT, NU>(0, rows, cols);
+        UDER * out =  new UDER(*tuples, false);
+        return SpParMat<IT, NU, UDER> (out, grid);
+    }
+
+    Dcsc<IT,NU>* Adcsc = A_elems.GetDCSC();
+    std::tuple<IT,IT,NU> * tuplesC = static_cast<std::tuple<IT,IT,NU> *> (::operator new (sizeof(std::tuple<IT,IT,NU>[nnz])));
+    size_t current = 0;
+
+    // std::vector<IT> globalColIds; 
+    //  for(typename UDER::SpColIter colit = A_elems->begcol(); colit != A_elems->endcol(); ++colit)    // iterate over nonempty subcolumns
+    // {
+    //     globalColIds.push_back(colit.colid())
+    // }
+
+    IT roffset = 0;
+    IT coffset = 0;
+    A.GetPlaceInGlobalGrid(roffset, coffset);
+    cout << "offsets for rank " << myrank <<  ": " << roffset << " and " << coffset << endl;
+
+    // #pragma omp parallel for
+    for (size_t i=0; i < Adcsc->nzc; ++i){
+        IT col = Adcsc->jc[i];
+        size_t nnzInCol = Adcsc->cp[i+1] - Adcsc->cp[i];
+        NU scale = v.at(coffset + col);
+
+        for (size_t j=Adcsc->cp[i]; j < Adcsc->cp[i] + nnzInCol; j++){
+            NU elem = Adcsc->numx[j];
+            IT row = Adcsc->ir[j];
+            NU output = SR::multiply(elem, scale);
+            tuplesC[current++] = std::make_tuple(row, col, output);
+            // cout << "elem: " << row << " " << col << " with value " << elem << " has now value " << output << endl;
+        }
+    }
+
+    SpTuples<IT, NU>* spTuplesC = new SpTuples<IT, NU> (nnz, rows, cols, tuplesC, true, true);
+    UDER *out = new UDER(*spTuplesC, false);
+    return SpParMat<IT, NU, UDER>(out, grid);
+    
 }
 
 

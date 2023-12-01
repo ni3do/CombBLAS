@@ -53,6 +53,7 @@
 #include "Operations.h"
 #include "DistEdgeList.h"
 #include "CombBLAS.h"
+#include "ParFriends.h"
 
 namespace combblas {
 
@@ -397,6 +398,9 @@ public:
 	template<typename VT, typename IU, typename UDER>
 	friend void LocalSpMV(const SpParMat<IU,bool,UDER> & A, int rowneighs, OptBuf<int32_t, VT > & optbuf, int32_t * & indacc, VT * & numacc, int * sendcnt, int accnz);
 
+	DER * getSpSeq() {return spSeq;}
+	void GetPlaceInGlobalGrid(IT& rowOffset, IT& colOffset) const;
+
 private:
 	typedef std::array<char, MAXVERTNAME> STRASARRAY;
 	typedef std::pair< STRASARRAY, uint64_t> TYPE2SEND;
@@ -426,7 +430,7 @@ private:
                     const std::vector<IT> & actcolsmap, std::vector<IT> & klimits, std::vector<IT> & toretain, std::vector<std::vector<std::pair<IT,NT>>> & tmppair,
                     IT coffset, const FullyDistVec<GIT,VT> & rvec) const;
     
-    void GetPlaceInGlobalGrid(IT& rowOffset, IT& colOffset) const;
+    
 	
 	void HorizontalSend(IT * & rows, IT * & cols, NT * & vals, IT * & temprows, IT * & tempcols, NT * & tempvals, std::vector < std::tuple <IT,IT,NT> > & localtuples,
 						int * rcurptrs, int * rdispls, IT buffperrowneigh, int rowneighs, int recvcount, IT m_perproc, IT n_perproc, int rankinrow);
@@ -466,8 +470,17 @@ SpParMat<IU,typename promote_trait<NU1,NU2>::T_promote,typename promote_trait<UD
 	return Mult_AnXBn_Synch<SR, N_promote, DER_promote> (A, B, clearA, clearB );
 }
 
+template <typename SR, typename IU, typename NU, typename UDER>
+SpParMat<IU, NU, UDER> PSpSCALE(SpParMat<IU, NU, UDER> &A, FullyDistVec<IU, NU> &v){
+	return ScaleSpMatrix<SR, IU, NU, UDER >(A,v);
 }
 
+template <typename SR, typename IU, typename NU, typename UDER>
+SpParMat<IU, NU, UDER> PSpSCALE(SpParMat<IU, NU, UDER> &A, std::vector<NU> &v){
+	return ScaleSpMatrix<SR, IU, NU, UDER >(A,v);
+}
+
+}
 
 
 #include "SpParMat.cpp"

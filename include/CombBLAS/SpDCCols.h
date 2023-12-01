@@ -133,6 +133,11 @@ public:
             {
                 return (*val);
             }
+
+						void scale_value(NT scale){
+							*val = (*val) * scale;
+						}
+						
         private:
             IT * rid;
             NT * val;

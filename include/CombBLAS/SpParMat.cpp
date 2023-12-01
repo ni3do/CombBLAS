@@ -5113,5 +5113,7 @@ void SpParMat<IT,NT,DER>::GetPlaceInGlobalGrid(IT& rowOffset, IT& colOffset) con
 	rowOffset = commGrid->GetRankInProcCol()*rows_perproc;
 	colOffset = commGrid->GetRankInProcRow()*cols_perproc;
 }
+
+
 	
 }

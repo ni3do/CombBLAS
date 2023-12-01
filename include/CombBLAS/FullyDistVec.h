@@ -274,6 +274,8 @@ public:
 	using FullyDist<IT,NT,typename combblas::disable_if< combblas::is_boolean<NT>::value, NT >::type>::glen;
 	using FullyDist<IT,NT,typename combblas::disable_if< combblas::is_boolean<NT>::value, NT >::type>::commGrid;
 
+	std::vector<NT> get_values() {return arr;};
+
 private:
 	std::vector< NT > arr;
 
