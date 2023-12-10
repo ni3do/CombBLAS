@@ -43,7 +43,10 @@ SpTuples<IT,NT>::SpTuples(int64_t size, IT nRow, IT nCol)
 	}
 	else
 	{
-		tuples = NULL;
+		std::cout << "before making tuples" << std::endl;
+		tuples = new std::tuple<IT, IT, NT>[0];
+		std::cout << "after making tuples" << std::endl;
+
 	}
     isOperatorNew = false;
 }

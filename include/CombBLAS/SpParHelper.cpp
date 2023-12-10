@@ -584,10 +584,14 @@ void SpParHelper::BCastMatrix(MPI_Comm & comm1d, SpMat<IT,NT,DER> & Matrix, cons
 {
 	int myrank;
 	MPI_Comm_rank(comm1d, &myrank);
+
+
+
 	if(myrank != root)
 	{
 		Matrix.Create(essentials);		// allocate memory for arrays		
 	}
+
 
 	Arr<IT,NT> arrinfo = Matrix.GetArrays();
 	for(unsigned int i=0; i< arrinfo.indarrs.size(); ++i)	// get index arrays
@@ -599,6 +603,52 @@ void SpParHelper::BCastMatrix(MPI_Comm & comm1d, SpMat<IT,NT,DER> & Matrix, cons
 		MPI_Bcast(arrinfo.numarrs[i].addr, arrinfo.numarrs[i].count, MPIType<NT>(), root, comm1d);
 	}			
 }
+
+// template<typename IT, typename NT, typename DER>	
+// void SpParHelper::SendMatrix(MPI_Comm & comm1d, SpMat<IT,NT,DER> & Matrix, const std::vector<IT> & essentials, int rankToSend)
+// {
+// 	int myrank;
+// 	MPI_Comm_rank(comm1d, &myrank);
+// 	// if(myrank != root)
+// 	// {
+// 	// 	Matrix.Create(essentials);		// allocate memory for arrays		
+// 	// }
+
+// 	Arr<IT,NT> arrinfo = Matrix.GetArrays();
+// 	for(unsigned int i=0; i< arrinfo.indarrs.size(); ++i)	// get index arrays
+// 	{
+// 		MPI_Isend(arrinfo.indarrs[i].addr, arrinfo.indarrs[i].count, MPIType<IT>(), rankToSend, 0, comm1d);
+// 	}
+// 	for(unsigned int i=0; i< arrinfo.numarrs.size(); ++i)	// get numerical arrays
+// 	{
+// 		MPI_Bcast(arrinfo.numarrs[i].addr, arrinfo.numarrs[i].count, MPIType<NT>(), rankToSend, 0, comm1d);
+// 	}			
+// }
+
+
+
+// template<typename IT, typename NT, typename DER>	
+// void SpParHelper::RecvMatrix(MPI_Comm & comm1d, SpMat<IT,NT,DER> & Matrix, const std::vector<IT> & essentials, int senderRank)
+// {
+// 	int myrank;
+// 	MPI_Comm_rank(comm1d, &myrank);
+// 	// if(myrank != root)
+// 	// {
+// 	// 	Matrix.Create(essentials);		// allocate memory for arrays		
+// 	// }
+
+// 	Matrix.Create(essentials);
+
+// 	Arr<IT,NT> arrinfo = Matrix.GetArrays();
+// 	for(unsigned int i=0; i< arrinfo.indarrs.size(); ++i)	// get index arrays
+// 	{
+// 		MPI_Irecv(arrinfo.indarrs[i].addr, arrinfo.indarrs[i].count, MPIType<IT>(), senderRank, 0, comm1d);
+// 	}
+// 	for(unsigned int i=0; i< arrinfo.numarrs.size(); ++i)	// get numerical arrays
+// 	{
+// 		MPI_Irecv(arrinfo.numarrs[i].addr, arrinfo.numarrs[i].count, MPIType<NT>(), senderRank, 0, comm1d);
+// 	}			
+// }
 
 /**
   * @param[in] Matrix {For the root processor, the local object to be sent to all others.
