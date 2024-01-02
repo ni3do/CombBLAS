@@ -84,6 +84,7 @@ public:
 	// Constructors
 	DistEdgeList ();
     DistEdgeList(MPI_Comm & myWorld);
+	DistEdgeList(std::shared_ptr<CommGrid> commGrid);
 	DistEdgeList (const char * filename, IT globaln, IT globalm);	// read from binary in parallel
 	~DistEdgeList ();
 

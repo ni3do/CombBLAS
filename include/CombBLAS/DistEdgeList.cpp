@@ -58,6 +58,11 @@ DistEdgeList<IT>::DistEdgeList(MPI_Comm & myWorld): edges(NULL), pedges(NULL), n
 }
 
 template <typename IT>
+DistEdgeList<IT>::DistEdgeList(std::shared_ptr<CommGrid> commGrid): edges(NULL), pedges(NULL), nedges(0), globalV(0), commGrid(commGrid)
+{
+}
+
+template <typename IT>
 DistEdgeList<IT>::DistEdgeList(const char * filename, IT globaln, IT globalm): edges(NULL), pedges(NULL), globalV(globaln)
 {
 	commGrid.reset(new CommGrid(MPI_COMM_WORLD, 0, 0));
