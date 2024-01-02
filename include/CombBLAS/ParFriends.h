@@ -1006,7 +1006,6 @@ SpParMat<IU, NUO, UDERO> Mult_AnXBn_Synch
 		(SpParMat<IU,NU1,UDERA> & A, SpParMat<IU,NU2,UDERB> & B, bool clearA = false, bool clearB = false )
 
 {
-    cout << "got here" << endl;
     int myrank;
     MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
     
